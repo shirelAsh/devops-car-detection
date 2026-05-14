@@ -1,0 +1,27 @@
+services:
+  detector:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: ${CAR_DETECTOR_IMAGE:-car-detector:local}
+    environment:
+      AWS_PROFILE: ${AWS_PROFILE:-default}
+      AWS_DEFAULT_REGION: ${AWS_DEFAULT_REGION:-us-east-1}
+      S3_BUCKET: ${S3_BUCKET:?set S3_BUCKET}
+      S3_VIDEO_KEY: ${S3_VIDEO_KEY:?set S3_VIDEO_KEY}
+      S3_LABELS_KEY: ${S3_LABELS_KEY:?set S3_LABELS_KEY}
+      S3_OUTPUT_PREFIX: ${S3_OUTPUT_PREFIX:-runs/}
+      YOLO_WEIGHTS: ${YOLO_WEIGHTS:-yolov8n.pt}
+      CONF_THRESHOLD: ${CONF_THRESHOLD:-0.35}
+      IOU_THRESHOLD: ${IOU_THRESHOLD:-0.5}
+      LABELS_NORMALIZED: ${LABELS_NORMALIZED:-true}
+      BUILD_ID: ${BUILD_ID:-}
+      MIN_PRECISION: ${MIN_PRECISION:-}
+      MIN_RECALL: ${MIN_RECALL:-}
+      MIN_ACCURACY: ${MIN_ACCURACY:-}
+      METRICS_GATE_BOX_METRICS: ${METRICS_GATE_BOX_METRICS:-global}
+      LABELED_GT_SHRINK: ${LABELED_GT_SHRINK:-0.01}
+      LABELED_BOX_IOU: ${LABELED_BOX_IOU:-0.85}
+    volumes:
+      # Windows: set USERPROFILE (default) or AWS_CREDENTIALS_DIR explicitly if HOME is unset
+      - ${AWS_CREDENTIALS_DIR:-${USERPROFILE}/.aws}:/root/.aws:ro

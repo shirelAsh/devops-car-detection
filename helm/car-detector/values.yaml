@@ -1,0 +1,42 @@
+image:
+  repository: car-detector
+  tag: "latest"
+  pullPolicy: IfNotPresent
+
+serviceAccount:
+  create: true
+  name: ""
+  annotations: {}
+  # IRSA example:
+  # annotations:
+  #   eks.amazonaws.com/role-arn: arn:aws:iam::111122223333:role/car-detector-s3
+
+podLabels: {}
+
+resources:
+  requests:
+    cpu: "1"
+    memory: 2Gi
+  limits:
+    memory: 4Gi
+
+env:
+  AWS_DEFAULT_REGION: us-east-1
+  S3_BUCKET: ""
+  S3_VIDEO_KEY: ""
+  S3_LABELS_KEY: ""
+  S3_OUTPUT_PREFIX: runs/
+  YOLO_WEIGHTS: yolov8n.pt
+  CONF_THRESHOLD: "0.35"
+  IOU_THRESHOLD: "0.5"
+  LABELS_NORMALIZED: "true"
+  MIN_PRECISION: ""
+  MIN_RECALL: ""
+  MIN_ACCURACY: ""
+  METRICS_GATE_BOX_METRICS: "global"
+  LABELED_GT_SHRINK: "0.01"
+  LABELED_BOX_IOU: "0.85"
+
+nodeSelector: {}
+tolerations: []
+affinity: {}

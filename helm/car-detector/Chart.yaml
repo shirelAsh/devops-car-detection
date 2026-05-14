@@ -1,0 +1,6 @@
+apiVersion: v2
+name: car-detector
+description: Batch car-detection evaluation job (YOLOv8) with S3 I/O
+type: application
+version: 0.1.0
+appVersion: "0.1.0"

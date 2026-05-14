@@ -216,3 +216,15 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# AWS CDK
+infra/cdk/cdk.out/
+infra/cdk/.venv/
+infra/cdk/**/*.egg-info/
+
+# YOLO weights (downloaded locally by Ultralytics / tools)
+*.pt
+
+# Large local label exports (regenerate with tools/)
+examples/labels.full.json
+examples/video.mp4
