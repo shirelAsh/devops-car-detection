@@ -1,6 +1,8 @@
 # Labels for interviews and submissions
 
-## What is in `labels.json` (default in this repo)
+## What is in `labels.json` (S3 artifact; optional local copy)
+
+The canonical file for the pipeline is **`labels.json` in S3** (`S3_LABELS_KEY`). Keep a local copy under `examples/` only when regenerating or inspecting; it is **not** committed to Git.
 
 - **`labeling_method`: `stratified_subset`** — we keep **every 20th** frame that had boxes in a dense referee export.
 - **`labeling_note`** — states that unlisted frames have **no** GT in this file, and that **CVAT / Label Studio** is the path to fully independent human GT.
