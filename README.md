@@ -90,10 +90,13 @@ Metrics appear under `s3://$S3_BUCKET/$S3_OUTPUT_PREFIX.../metrics.json`.
 
 ## Jenkins
 
-1. Agent with Docker and `docker compose` v2 + AWS CLI (or use plugins).
-2. Define pipeline from repo `Jenkinsfile`.
-3. Set job environment / parameters: `S3_BUCKET`, `S3_VIDEO_KEY`, `S3_LABELS_KEY`, optional `MIN_*`, `AWS_DEFAULT_REGION`.
-4. For ECR push, set `ECR_REGISTRY` (e.g. `123456789012.dkr.ecr.region.amazonaws.com`) and `ECR_REPOSITORY`; image tag uses `BUILD_NUMBER` via `CAR_DETECTOR_IMAGE`.
+**Why there is no “Build Environment” block:** that section exists on **Freestyle** jobs. This repo uses a **Pipeline** job (**Pipeline script from SCM**). Environment for `docker compose` comes from the **`Jenkinsfile`** (`parameters` + `environment {}`), not from a separate Build Environment UI.
+
+1. Agent with Docker and `docker compose` v2 + AWS CLI (or use plugins). The agent user must have AWS credentials (e.g. `~/.aws` or instance role) matching `AWS_PROFILE` in the parameters.
+2. Job definition: **Pipeline script from SCM** → your repo/branch → **Script Path** `Jenkinsfile`.
+3. Run **Build with Parameters** (Hebrew UI often: **בנייה עם פרמטרים**). Set **S3_BUCKET** (required), and adjust **S3_VIDEO_KEY**, **S3_LABELS_KEY**, **AWS_DEFAULT_REGION**, **AWS_PROFILE**, optional **MIN_***, **METRICS_GATE_BOX_METRICS** as needed.
+4. For ECR push, set Jenkins job environment variables **`ECR_REGISTRY`** (e.g. `123456789012.dkr.ecr.region.amazonaws.com`) and **`ECR_REPOSITORY`** on the agent or in the job’s “Inject environment variables” / global properties if your admin allows it; the `Push to ECR` stage runs only when both are non-empty. Image tag uses `BUILD_NUMBER` via `CAR_DETECTOR_IMAGE`.
+5. **Windows agents:** the pipeline uses **`bat`** when `isUnix()` is false. If you still see “Cannot run program `sh`”, pull the latest `Jenkinsfile` (or add Git’s `bin` to the Jenkins service `PATH` so `sh` exists).
 
 ## Helm on EKS
 
