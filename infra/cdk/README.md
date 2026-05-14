@@ -26,24 +26,42 @@ cdk bootstrap "aws://$($env:CDK_DEFAULT_ACCOUNT)/$($env:CDK_DEFAULT_REGION)"
 
 ## Deploy bucket
 
-**Option A — CDK generates a unique bucket name** (simplest):
+Deploy **only** the data stack (recommended if you already manage ECR elsewhere):
 
 ```powershell
-cdk deploy
+cdk deploy CarDetectorDataStack
 ```
 
-**Option B — stable name** (must be **globally** unique across all AWS):
+Or deploy **everything** defined in `app.py` (S3 + ECR):
 
 ```powershell
-cdk deploy -c bucketName=david-car-detector-data-2026-euwest1
+cdk deploy --all
+```
+
+**Stable bucket name** (must be **globally** unique across all AWS):
+
+```powershell
+cdk deploy CarDetectorDataStack -c bucketName=david-car-detector-data-2026-euwest1
 ```
 
 Copy the **output** `BucketName` from CloudFormation; use it as `S3_BUCKET` in Docker / Jenkins / Helm.
 
+## Deploy ECR repository (optional second stack)
+
+Creates a private **ECR** repo for the detector image (scan on push). See also [`docs/ECR_AND_IRSA.md`](../../docs/ECR_AND_IRSA.md).
+
+```powershell
+# Same venv / CDK_DEFAULT_* as above. Optional stable name:
+cdk deploy CarDetectorEcrStack -c ecrRepositoryName=car-detector
+```
+
+Outputs: **RepositoryUri**, **RepositoryName**. For Jenkins `ECR_REGISTRY` / `ECR_REPOSITORY`, split the URI (host vs path — see the doc).
+
 ## Destroy (removes bucket and objects because of `auto_delete_objects`)
 
 ```powershell
-cdk destroy
+cdk destroy CarDetectorDataStack
+cdk destroy CarDetectorEcrStack
 ```
 
 For a **submission** bucket you want to keep, change `removal_policy` and `auto_delete_objects` in `car_detector_stack.py` before deploying.

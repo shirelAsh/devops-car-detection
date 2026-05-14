@@ -147,7 +147,9 @@ aws s3 cp s3://cardetectordatastack-cardetectorbucketf3ab59bc-fwx6sufdchpi/runs/
 
 ## Helm on EKS
 
-Create an IAM role (IRSA) with least-privilege S3 access; set `serviceAccount.annotations` in `values.yaml`. Default **MIN_*** / **METRICS_GATE_BOX_METRICS** in `values.yaml` match the Jenkins gates; override with `--set` if needed.
+**ECR + IRSA first:** step-by-step is in [`docs/ECR_AND_IRSA.md`](docs/ECR_AND_IRSA.md) (create ECR repo, push image, S3 IAM policy, OIDC/IRSA role, then Helm below).
+
+Create an IAM role (IRSA) with least-privilege S3 access; set `serviceAccount.annotations` in `values.yaml` (or `--set` as in the doc). Default **MIN_*** / **METRICS_GATE_BOX_METRICS** in `values.yaml` match the Jenkins gates; override with `--set` if needed.
 
 ```bash
 helm upgrade --install car-detector ./helm/car-detector -n car-detector --create-namespace \
