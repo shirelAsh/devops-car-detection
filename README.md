@@ -29,14 +29,14 @@ python tools/make_stratified_labels.py --input examples/labels.full.json -o exam
 
 ## Metrics
 
-- **Frame-level confusion matrix** (car presence vs any car prediction over `CONF_THRESHOLD`).
+- **Frame-level confusion matrix** (car presence vs any car prediction over `CONF_THRESHOLD`). By default **`FRAME_CM_ANNOTATED_FRAMES_ONLY=true`**: only frame indices that **appear in `labels.json`** are counted. That way **stratified / sparse** label files do not treat every unlisted video frame as “no car” ground truth (which used to crush **accuracy_frame_car_presence**). Set **`FRAME_CM_ANNOTATED_FRAMES_ONLY=false`** to restore the old “every video frame” behavior (only if your label file truly annotates absence on all frames).
 - **Box-level** TP / FP / FN with greedy IoU matching (`IOU_THRESHOLD`).
 - **precision**, **recall** from box counts on **all evaluated frames** (with sparse labels, many frames have no GT, so box-level precision is often low even when the model is reasonable).
 - **labeled_frames_with_gt_boxes**, **box_counts_labeled_frames_only**, **precision_labeled_frames_only**, **recall_labeled_frames_only**, **accuracy_box_detection_labeled_frames_only**: only frames where the label file has **≥1 GT car box**. GT boxes are **inset** by `LABELED_GT_SHRINK` (default `0.01`, fraction of each side; `0` = no inset) and matched at **`LABELED_BOX_IOU`** (default stricter than `IOU_THRESHOLD`) so **pseudo-labels from the same detector** usually do **not** read as perfect **1.0** / **1.0** / **1.0**. Tune both env vars for your label style.
-- **accuracy_frame_car_presence**: \((TP+TN)/N\) over frames.
+- **accuracy_frame_car_presence**: \((TP+TN)/N\) over frames included in the frame confusion matrix (see `frame_cm_scope` and `frames_in_frame_confusion_matrix` in `metrics.json`).
 - **accuracy_box_detection**: \(TP/(TP+FP+FN)\) over all frames (global box counts).
 
-Optional gates: non-zero exit if below `MIN_PRECISION`, `MIN_RECALL`, or `MIN_ACCURACY`. `MIN_PRECISION` / `MIN_RECALL` compare to the **global** box precision/recall by default; set **`METRICS_GATE_BOX_METRICS=labeled`** to gate on **precision_labeled_frames_only** / **recall_labeled_frames_only** instead. `MIN_ACCURACY` always uses **frame**-level car presence accuracy.
+Optional gates: non-zero exit if below `MIN_PRECISION`, `MIN_RECALL`, or `MIN_ACCURACY`. `MIN_PRECISION` / `MIN_RECALL` compare to **global** or **labeled** box metrics per **`METRICS_GATE_BOX_METRICS`** (default **`labeled`** in Compose / Helm / Jenkins). `MIN_ACCURACY` uses **frame**-level car presence accuracy (respecting **`FRAME_CM_ANNOTATED_FRAMES_ONLY`**).
 
 ## Environment variables
 
@@ -53,7 +53,8 @@ Optional gates: non-zero exit if below `MIN_PRECISION`, `MIN_RECALL`, or `MIN_AC
 | `LABELS_NORMALIZED` | `true` / `false` |
 | `BUILD_ID` | Optional; appended to output path for CI |
 | `MIN_PRECISION`, `MIN_RECALL`, `MIN_ACCURACY` | Optional CI gates |
-| `METRICS_GATE_BOX_METRICS` | `global` (default) or `labeled` — which box precision/recall `MIN_*` gates use |
+| `METRICS_GATE_BOX_METRICS` | `labeled` (default in Compose / Helm) or `global` — which box precision/recall `MIN_*` gates use |
+| `FRAME_CM_ANNOTATED_FRAMES_ONLY` | `true` (default): frame confusion / `MIN_ACCURACY` only use frame indices listed in `labels.json`. `false`: use every decoded video frame (legacy; harsh with sparse labels). |
 | `LABELED_GT_SHRINK` | Fraction of each GT box’s width/height inset per side for labeled-only matching (default `0.01`; `0` = no inset, old “optimistic” behavior) |
 | `LABELED_BOX_IOU` | IoU threshold for that pass (unset ≈ `max(0.85, IOU_THRESHOLD+0.35)`, capped at `0.96`) |
 | `YOLO_CONFIG_DIR` | Ultralytics config cache (Dockerfile default `/tmp/Ultralytics`) |

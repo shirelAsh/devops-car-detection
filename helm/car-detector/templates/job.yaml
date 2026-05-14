@@ -43,6 +43,8 @@ spec:
               value: {{ .Values.env.LABELS_NORMALIZED | quote }}
             - name: METRICS_GATE_BOX_METRICS
               value: {{ .Values.env.METRICS_GATE_BOX_METRICS | default "labeled" | quote }}
+            - name: FRAME_CM_ANNOTATED_FRAMES_ONLY
+              value: {{ .Values.env.FRAME_CM_ANNOTATED_FRAMES_ONLY | default "true" | quote }}
             - name: LABELED_GT_SHRINK
               value: {{ .Values.env.LABELED_GT_SHRINK | default "0.01" | quote }}
             - name: LABELED_BOX_IOU

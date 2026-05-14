@@ -24,6 +24,7 @@ pipeline {
     MIN_RECALL = "${params.MIN_RECALL?.trim() ? params.MIN_RECALL.trim() : (env.MIN_RECALL ?: '')}"
     MIN_ACCURACY = "${params.MIN_ACCURACY?.trim() ? params.MIN_ACCURACY.trim() : (env.MIN_ACCURACY ?: '')}"
     METRICS_GATE_BOX_METRICS = "${params.METRICS_GATE_BOX_METRICS?.trim() ? params.METRICS_GATE_BOX_METRICS.trim() : (env.METRICS_GATE_BOX_METRICS ?: 'labeled')}"
+    FRAME_CM_ANNOTATED_FRAMES_ONLY = "${env.FRAME_CM_ANNOTATED_FRAMES_ONLY ?: 'true'}"
     BUILD_ID = "${env.BUILD_NUMBER}"
   }
 

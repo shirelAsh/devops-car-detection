@@ -39,6 +39,13 @@ def _env(name: str, default: str | None = None) -> str | None:
     return default
 
 
+def _env_bool(name: str, default: bool = True) -> bool:
+    v = os.environ.get(name)
+    if v is None or (isinstance(v, str) and v.strip() == ""):
+        return default
+    return str(v).strip().lower() in ("1", "true", "yes", "on")
+
+
 def iou_xyxy(a: np.ndarray, b: np.ndarray) -> float:
     """a, b: (4,) xyxy pixel coords."""
     x1 = max(a[0], b[0])
@@ -192,6 +199,7 @@ class RunConfig:
     min_precision: float | None
     min_recall: float | None
     min_accuracy: float | None
+    frame_cm_annotated_only: bool
 
 
 def parse_args() -> RunConfig:
@@ -247,6 +255,7 @@ def parse_args() -> RunConfig:
         min_precision=args.min_precision if args.min_precision is not None else thr("MIN_PRECISION"),
         min_recall=args.min_recall if args.min_recall is not None else thr("MIN_RECALL"),
         min_accuracy=args.min_accuracy if args.min_accuracy is not None else thr("MIN_ACCURACY"),
+        frame_cm_annotated_only=_env_bool("FRAME_CM_ANNOTATED_FRAMES_ONLY", True),
     )
 
 
@@ -294,6 +303,11 @@ def main() -> int:
         LOG.info("Video frames=%s size=%sx%s fps=%s", n_frames, width, height, fps)
 
         labels_map = load_labels_json(labels_path)
+        if cfg.frame_cm_annotated_only and not labels_map:
+            LOG.error(
+                "FRAME_CM_ANNOTATED_FRAMES_ONLY=true but labels JSON has no frame entries"
+            )
+            return 2
 
         model = YOLO(cfg.weights)
 
@@ -302,7 +316,8 @@ def main() -> int:
         # Same IoU matching, but only frames where GT has ≥1 car box (fairer precision/recall)
         lab_box_tp = lab_box_fp = lab_box_fn = 0
         labeled_frames_with_gt = 0
-        # Frame-level binary: car in GT vs predicted car (any det above conf)
+        # Frame-level binary: car in GT vs predicted car (any det above conf).
+        # When frame_cm_annotated_only, only frames listed in labels.json count (fair sparse labels).
         cm_tn = cm_fp = cm_fn = cm_tp = 0
 
         frame_idx = 0
@@ -351,16 +366,18 @@ def main() -> int:
                 lab_box_fp += fp_l
                 lab_box_fn += fn_l
 
-            gt_has = len(gt_pixels) > 0
-            pred_has = len(pred_boxes) > 0
-            if gt_has and pred_has:
-                cm_tp += 1
-            elif not gt_has and pred_has:
-                cm_fp += 1
-            elif gt_has and not pred_has:
-                cm_fn += 1
-            else:
-                cm_tn += 1
+            include_frame_cm = (not cfg.frame_cm_annotated_only) or (frame_idx in labels_map)
+            if include_frame_cm:
+                gt_has = len(gt_pixels) > 0
+                pred_has = len(pred_boxes) > 0
+                if gt_has and pred_has:
+                    cm_tp += 1
+                elif not gt_has and pred_has:
+                    cm_fp += 1
+                elif gt_has and not pred_has:
+                    cm_fn += 1
+                else:
+                    cm_tn += 1
 
             frame_idx += 1
             if n_frames > 0 and frame_idx >= n_frames:
@@ -411,6 +428,13 @@ def main() -> int:
             "labeled_box_iou_threshold": cfg.labeled_box_iou,
             "labeled_gt_shrink_edge_fraction": cfg.labeled_gt_shrink,
             "metrics_gate_box_precision_recall": cfg.metrics_gate_box,
+            "frame_cm_scope": (
+                "label_file_frames_only"
+                if cfg.frame_cm_annotated_only
+                else "all_video_frames"
+            ),
+            "label_file_frame_index_count": len(labels_map),
+            "frames_in_frame_confusion_matrix": cm_tp + cm_fp + cm_fn + cm_tn,
             "frames_evaluated": frame_idx,
             "video_reported_frame_count": n_frames,
             "confusion_matrix_frame_car_presence": confusion_frame,
@@ -436,14 +460,29 @@ def main() -> int:
                 "with GT boxes inset by labeled_gt_shrink_edge_fraction (simulates annotation "
                 "tolerance; 0 disables inset) and IoU threshold labeled_box_iou_threshold (stricter "
                 "than the global iou_match_threshold unless overridden). "
-                "accuracy_frame_car_presence uses frame-level car presence vs any car prediction."
+                "accuracy_frame_car_presence uses frame-level car presence vs any car prediction. "
+                "When FRAME_CM_ANNOTATED_FRAMES_ONLY=true (default), that confusion matrix only "
+                "includes frames that appear in labels.json, so sparse labels do not treat every "
+                "unlisted frame as 'no car' ground truth."
             ),
         }
 
         metrics_path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
         s3_upload(s3, cfg.bucket, out_name, metrics_path, "application/json")
 
-        LOG.info("Confusion (frame car presence): TN=%s FP=%s FN=%s TP=%s", cm_tn, cm_fp, cm_fn, cm_tp)
+        cm_scope = (
+            "label-file frames only"
+            if cfg.frame_cm_annotated_only
+            else "all video frames"
+        )
+        LOG.info(
+            "Confusion (frame car presence, %s): TN=%s FP=%s FN=%s TP=%s",
+            cm_scope,
+            cm_tn,
+            cm_fp,
+            cm_fn,
+            cm_tp,
+        )
         LOG.info("Box TP=%s FP=%s FN=%s", box_tp, box_fp, box_fn)
         LOG.info("Precision=%s Recall=%s Accuracy(frame)=%s Accuracy(box)=%s", precision, recall, accuracy_frames, accuracy_boxes)
         LOG.info(
