@@ -19,11 +19,7 @@ Coordinates are **xyxy**: `[x1, y1, x2, y2]`. By default boxes are **normalized*
 - `i` (or `frame`): zero-based frame index.
 - `boxes`: list of car bounding boxes (only the **car** class is evaluated; labels should be cars only).
 
-Starter files: [`examples/labels.smoke-test.json`](examples/labels.smoke-test.json), [`examples/labels.sample-with-boxes.json`](examples/labels.sample-with-boxes.json).
-
-**Local `examples/labels.json`** (optional, not in Git): generate with the commands below, then `aws s3 cp` to your bucket; `S3_LABELS_KEY` points at S3 only.
-
-**Pseudo-labels from video** (dense export, then stratify — see [`examples/README.labels.md`](examples/README.labels.md)):
+**Pseudo-labels from video** (dense export, then stratify — details and interview notes in [`docs/LABELS.md`](docs/LABELS.md)):
 
 ```powershell
 pip install ultralytics opencv-python-headless

@@ -225,7 +225,5 @@ infra/cdk/**/*.egg-info/
 # YOLO weights (downloaded locally by Ultralytics / tools)
 *.pt
 
-# Large local label exports (regenerate with tools/); primary copy lives in S3
-examples/labels.full.json
-examples/labels.json
-examples/video.mp4
+# Local-only dataset (video, labels, exports); canonical data is in S3
+examples/
