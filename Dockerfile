@@ -14,7 +14,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 WORKDIR /app
 
 COPY requirements.txt .
-RUN pip install --upgrade pip && pip install -r requirements.txt
+# CPU-only PyTorch (Ultralytics inference). Avoids multi-GB CUDA wheels from PyPI → much faster builds.
+RUN pip install --upgrade pip \
+    && pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu \
+    && pip install -r requirements.txt
 
 COPY app.py .
 

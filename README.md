@@ -72,6 +72,8 @@ Docker Compose loads **`.env`** in the project root automatically (no need to `$
 
 Prerequisites: Docker, AWS credentials under `%USERPROFILE%\.aws`. Set `AWS_PROFILE` in `.env` (e.g. `car-detector`). Override the credentials mount with `AWS_CREDENTIALS_DIR` in `.env` if needed.
 
+The **Dockerfile** installs **CPU-only** PyTorch from `download.pytorch.org` so image builds avoid multi‑gigabyte CUDA wheels (faster CI than a default `pip install torch`).
+
 PowerShell example (if you prefer not to use `.env` for some vars):
 
 ```powershell
