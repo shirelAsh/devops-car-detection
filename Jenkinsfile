@@ -7,10 +7,10 @@ pipeline {
     string(name: 'S3_LABELS_KEY', defaultValue: 'labels.json', description: 'S3 object key for labels JSON')
     string(name: 'AWS_DEFAULT_REGION', defaultValue: 'eu-west-1', description: 'AWS region for S3 and ECR')
     string(name: 'AWS_PROFILE', defaultValue: 'default', description: 'Profile name inside ~/.aws mounted into the container')
-    string(name: 'MIN_PRECISION', defaultValue: '', description: 'Optional — fail build if global box precision is below this (empty = disabled)')
-    string(name: 'MIN_RECALL', defaultValue: '', description: 'Optional — fail build if global box recall is below this (empty = disabled)')
-    string(name: 'MIN_ACCURACY', defaultValue: '', description: 'Optional — fail build if frame car-presence accuracy is below this (empty = disabled)')
-    string(name: 'METRICS_GATE_BOX_METRICS', defaultValue: 'global', description: 'global or labeled — which metrics MIN_PRECISION/MIN_RECALL compare against')
+    string(name: 'MIN_PRECISION', defaultValue: '0.05', description: 'Fail if box precision (see METRICS_GATE_BOX_METRICS) is below this. Clear + unset global to disable.')
+    string(name: 'MIN_RECALL', defaultValue: '0.05', description: 'Fail if box recall (see METRICS_GATE_BOX_METRICS) is below this. Clear + unset global to disable.')
+    string(name: 'MIN_ACCURACY', defaultValue: '0.45', description: 'Fail if frame car-presence accuracy is below this. Clear + unset global to disable.')
+    string(name: 'METRICS_GATE_BOX_METRICS', defaultValue: 'labeled', description: 'labeled (recommended, sparse labels) or global — which box metrics MIN_PRECISION/MIN_RECALL use')
   }
 
   environment {
@@ -23,7 +23,7 @@ pipeline {
     MIN_PRECISION = "${params.MIN_PRECISION?.trim() ? params.MIN_PRECISION.trim() : (env.MIN_PRECISION ?: '')}"
     MIN_RECALL = "${params.MIN_RECALL?.trim() ? params.MIN_RECALL.trim() : (env.MIN_RECALL ?: '')}"
     MIN_ACCURACY = "${params.MIN_ACCURACY?.trim() ? params.MIN_ACCURACY.trim() : (env.MIN_ACCURACY ?: '')}"
-    METRICS_GATE_BOX_METRICS = "${params.METRICS_GATE_BOX_METRICS?.trim() ? params.METRICS_GATE_BOX_METRICS.trim() : (env.METRICS_GATE_BOX_METRICS ?: 'global')}"
+    METRICS_GATE_BOX_METRICS = "${params.METRICS_GATE_BOX_METRICS?.trim() ? params.METRICS_GATE_BOX_METRICS.trim() : (env.METRICS_GATE_BOX_METRICS ?: 'labeled')}"
     BUILD_ID = "${env.BUILD_NUMBER}"
   }
 

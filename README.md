@@ -94,13 +94,14 @@ Metrics appear under `s3://$S3_BUCKET/$S3_OUTPUT_PREFIX.../metrics.json`.
 
 1. Agent with Docker and `docker compose` v2 + AWS CLI (or use plugins). The agent user must have AWS credentials (e.g. `~/.aws` or instance role) matching `AWS_PROFILE` in the parameters.
 2. Job definition: **Pipeline script from SCM** → your repo/branch → **Script Path** `Jenkinsfile`.
-3. Run **Build with Parameters** (Hebrew UI often: **בנייה עם פרמטרים**). Set **S3_BUCKET** (required), and adjust **S3_VIDEO_KEY**, **S3_LABELS_KEY**, **AWS_DEFAULT_REGION**, **AWS_PROFILE**, optional **MIN_***, **METRICS_GATE_BOX_METRICS** as needed.
-4. For ECR push, set Jenkins job environment variables **`ECR_REGISTRY`** (e.g. `123456789012.dkr.ecr.region.amazonaws.com`) and **`ECR_REPOSITORY`** on the agent or in the job’s “Inject environment variables” / global properties if your admin allows it; the `Push to ECR` stage runs only when both are non-empty. Image tag uses `BUILD_NUMBER` via `CAR_DETECTOR_IMAGE`.
-5. **Windows agents:** the pipeline uses **`bat`** when `isUnix()` is false. If you still see “Cannot run program `sh`”, pull the latest `Jenkinsfile` (or add Git’s `bin` to the Jenkins service `PATH` so `sh` exists).
+3. Run **Build with Parameters** (Hebrew UI often: **בנייה עם פרמטרים**). Set **S3_BUCKET** (required), and adjust **S3_VIDEO_KEY**, **S3_LABELS_KEY**, **AWS_DEFAULT_REGION**, **AWS_PROFILE** as needed.
+4. **Metric gates (requirement 4):** the `Jenkinsfile` defaults are **`METRICS_GATE_BOX_METRICS=labeled`**, **`MIN_PRECISION=0.05`**, **`MIN_RECALL=0.05`**, **`MIN_ACCURACY=0.45`** so a successful build implies metrics cleared those floors (container exits non‑zero otherwise). Clear those parameter fields **and** remove matching Jenkins globals if you need to disable gates for debugging.
+5. For ECR push, set Jenkins job environment variables **`ECR_REGISTRY`** (e.g. `123456789012.dkr.ecr.region.amazonaws.com`) and **`ECR_REPOSITORY`** on the agent or in the job’s “Inject environment variables” / global properties if your admin allows it; the `Push to ECR` stage runs only when both are non-empty. Image tag uses `BUILD_NUMBER` via `CAR_DETECTOR_IMAGE`.
+6. **Windows agents:** the pipeline uses **`bat`** when `isUnix()` is false. If you still see “Cannot run program `sh`”, pull the latest `Jenkinsfile` (or add Git’s `bin` to the Jenkins service `PATH` so `sh` exists).
 
 ## Helm on EKS
 
-Create an IAM role (IRSA) with least-privilege S3 access; set `serviceAccount.annotations` in `values.yaml`.
+Create an IAM role (IRSA) with least-privilege S3 access; set `serviceAccount.annotations` in `values.yaml`. Default **MIN_*** / **METRICS_GATE_BOX_METRICS** in `values.yaml` match the Jenkins gates; override with `--set` if needed.
 
 ```bash
 helm upgrade --install car-detector ./helm/car-detector -n car-detector --create-namespace \
