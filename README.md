@@ -89,7 +89,50 @@ docker compose build detector
 docker compose run --rm detector
 ```
 
-Metrics appear under `s3://$S3_BUCKET/$S3_OUTPUT_PREFIX.../metrics.json`.
+Metrics appear under `s3://$S3_BUCKET/$S3_OUTPUT_PREFIX.../metrics.json`. See **Verification: metrics S3 path and sample output** below for a concrete URI and JSON shape.
+
+## Cursor prompt (assignment)
+
+Use this block as the **Cursor prompt you used** in your write-up. If your real wording was different, **replace the quoted block** with your exact chat prompt (keep the heading so graders can find it).
+
+> Implement a DevOps-ready **car detection evaluation service** for video:
+>
+> - Use **YOLOv8** pretrained weights; evaluate **COCO class “car” only** (`classes=[2]`).
+> - **Download** an MP4 and a `labels.json` from **S3** (bucket + keys via env), run frame-by-frame inference, compare predictions to labels (xyxy boxes, normalized by default).
+> - Compute a **2×2 confusion matrix** for frame-level car presence vs predicted presence, plus **box-level** TP/FP/FN with IoU matching, **precision / recall / accuracy**, and **labeled-frame-only** metrics where labels are sparse; write **`metrics.json`** back to S3 under `S3_OUTPUT_PREFIX`, optionally with `BUILD_ID` in the path.
+> - Support optional **CI gates**: `MIN_PRECISION`, `MIN_RECALL`, `MIN_ACCURACY` and `METRICS_GATE_BOX_METRICS` / `FRAME_CM_ANNOTATED_FRAMES_ONLY` for fair sparse labels.
+> - Provide **Dockerfile** (CPU-friendly PyTorch), **docker-compose** for local runs, **Jenkinsfile** (build + `docker compose run`, Windows `bat` + Linux `sh`, optional ECR), and a **Helm Job** for EKS with IRSA notes in `values.yaml`. Document env vars and verification in **README**.
+
+## Verification: metrics S3 path and sample output
+
+After a **green** Jenkins or local `docker compose run --rm detector`, the log line `Metrics written to s3://…` is the object to cite.
+
+**Example (replace bucket/key if yours differ)** — from a successful Jenkins run with `BUILD_ID=4`:
+
+`s3://cardetectordatastack-cardetectorbucketf3ab59bc-fwx6sufdchpi/runs/4_20260514T124810Z/metrics.json`
+
+**List or download (AWS CLI, same profile/region as the run):**
+
+```powershell
+aws s3 ls s3://cardetectordatastack-cardetectorbucketf3ab59bc-fwx6sufdchpi/runs/
+aws s3 cp s3://cardetectordatastack-cardetectorbucketf3ab59bc-fwx6sufdchpi/runs/4_20260514T124810Z/metrics.json -
+```
+
+**Tiny `metrics.json` excerpt** (fields and order may vary slightly; values match that run’s console summary):
+
+```json
+{
+  "schema": "car-detector-metrics/1",
+  "frame_cm_scope": "label_file_frames_only",
+  "frames_in_frame_confusion_matrix": 23,
+  "accuracy_frame_car_presence": 1.0,
+  "precision_labeled_frames_only": 1.0,
+  "recall_labeled_frames_only": 0.382353,
+  "accuracy_box_detection_labeled_frames_only": 0.382353
+}
+```
+
+**Expected console lines** (abridged): `Confusion (frame car presence, label-file frames only): …` then `Metrics written to s3://…`.
 
 ## Jenkins
 
@@ -121,10 +164,6 @@ Verify:
 kubectl get jobs,pods -n car-detector
 kubectl logs -n car-detector job/car-detector-car-detector
 ```
-
-## Cursor prompt (fill in what you used)
-
-> *(Paste the prompt you used in Cursor to generate or refine this project.)*
 
 ## Optional: S3 bucket with AWS CDK (Python)
 
