@@ -13,6 +13,7 @@ pipeline {
     string(name: 'METRICS_GATE_BOX_METRICS', defaultValue: 'labeled', description: 'labeled (recommended, sparse labels) or global — which box metrics MIN_PRECISION/MIN_RECALL use')
   }
 
+  // Faster rebuilds: BuildKit + Compose delegating build (pip cache mount in Dockerfile).
   environment {
     // Prefer Build Parameters; if empty, inherit Jenkins global / node env (Option B).
     S3_BUCKET = "${params.S3_BUCKET?.trim() ? params.S3_BUCKET.trim() : (env.S3_BUCKET ?: '')}"
@@ -26,6 +27,8 @@ pipeline {
     METRICS_GATE_BOX_METRICS = "${params.METRICS_GATE_BOX_METRICS?.trim() ? params.METRICS_GATE_BOX_METRICS.trim() : (env.METRICS_GATE_BOX_METRICS ?: 'labeled')}"
     FRAME_CM_ANNOTATED_FRAMES_ONLY = "${env.FRAME_CM_ANNOTATED_FRAMES_ONLY ?: 'true'}"
     BUILD_ID = "${env.BUILD_NUMBER}"
+    DOCKER_BUILDKIT = '1'
+    COMPOSE_DOCKER_CLI_BUILD = '1'
   }
 
   stages {
@@ -36,12 +39,6 @@ pipeline {
             error 'S3_BUCKET is empty. Set it under Manage Jenkins → System → Global properties → Environment variables, or use Build with Parameters / "בנייה עם פרמטרים".'
           }
         }
-      }
-    }
-
-    stage('Checkout') {
-      steps {
-        checkout scm
       }
     }
 
