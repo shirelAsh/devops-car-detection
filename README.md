@@ -107,15 +107,18 @@ Use this block as the **Cursor prompt you used** in your write-up. If your real 
 
 After a **green** Jenkins or local `docker compose run --rm detector`, the log line `Metrics written to s3://…` is the object to cite.
 
-**Example (replace bucket/key if yours differ)** — from a successful Jenkins run with `BUILD_ID=4`:
+**Examples (this project, `eu-west-1`):**
 
-`s3://cardetectordatastack-cardetectorbucketf3ab59bc-fwx6sufdchpi/runs/4_20260514T124810Z/metrics.json`
+- **Jenkins** build **#15** (image tag `15` in ECR):  
+  `s3://cardetectordatastack-cardetectorbucketf3ab59bc-fwx6sufdchpi/runs/15_20260515T081940Z/metrics.json`
+- **EKS** Helm Job (no `BUILD_ID` in path):  
+  `s3://cardetectordatastack-cardetectorbucketf3ab59bc-fwx6sufdchpi/runs/20260515T091032Z/metrics.json`
 
 **List or download (AWS CLI, same profile/region as the run):**
 
 ```powershell
-aws s3 ls s3://cardetectordatastack-cardetectorbucketf3ab59bc-fwx6sufdchpi/runs/
-aws s3 cp s3://cardetectordatastack-cardetectorbucketf3ab59bc-fwx6sufdchpi/runs/4_20260514T124810Z/metrics.json -
+aws s3 ls s3://cardetectordatastack-cardetectorbucketf3ab59bc-fwx6sufdchpi/runs/ --profile car-detector
+aws s3 cp s3://cardetectordatastack-cardetectorbucketf3ab59bc-fwx6sufdchpi/runs/15_20260515T081940Z/metrics.json - --profile car-detector
 ```
 
 **Tiny `metrics.json` excerpt** (fields and order may vary slightly; values match that run’s console summary):
@@ -151,21 +154,50 @@ aws s3 cp s3://cardetectordatastack-cardetectorbucketf3ab59bc-fwx6sufdchpi/runs/
 
 Create an IAM role (IRSA) with least-privilege S3 access; set `serviceAccount.annotations` in `values.yaml` (or `--set` as in the doc). Default **MIN_*** / **METRICS_GATE_BOX_METRICS** in `values.yaml` match the Jenkins gates; override with `--set` if needed.
 
+**Cluster used in this project:** `car-detector-eks` (`eu-west-1`). Connect:
+
+```powershell
+aws eks update-kubeconfig --region eu-west-1 --name car-detector-eks --profile car-detector
+```
+
+**Helm install (this account — replace role ARN if yours differs):**
+
+```powershell
+helm upgrade --install car-detector ./helm/car-detector `
+  -n car-detector --create-namespace `
+  --set serviceAccount.annotations."eks\.amazonaws\.com/role-arn"=arn:aws:iam::737404990857:role/CarDetectorEksS3Role `
+  --set image.repository=737404990857.dkr.ecr.eu-west-1.amazonaws.com/car-detector `
+  --set image.tag=15 `
+  --set env.S3_BUCKET=cardetectordatastack-cardetectorbucketf3ab59bc-fwx6sufdchpi `
+  --set env.S3_VIDEO_KEY=video.mp4 `
+  --set env.S3_LABELS_KEY=labels.json `
+  --set env.AWS_DEFAULT_REGION=eu-west-1
+```
+
+If a Job already exists, delete it before changing the pod template: `kubectl delete job car-detector-car-detector -n car-detector`, then run Helm again.
+
+Generic placeholders (other accounts):
+
 ```bash
 helm upgrade --install car-detector ./helm/car-detector -n car-detector --create-namespace \
-  --set image.repository=YOUR_ECR/car-detector \
+  --set serviceAccount.annotations."eks\.amazonaws\.com/role-arn"=arn:aws:iam::ACCOUNT_ID:role/YOUR_IRSA_ROLE \
+  --set image.repository=ACCOUNT_ID.dkr.ecr.REGION.amazonaws.com/car-detector \
   --set image.tag=YOUR_TAG \
   --set env.S3_BUCKET=your-bucket \
-  --set env.S3_VIDEO_KEY=datasets/video/sample.mp4 \
-  --set env.S3_LABELS_KEY=datasets/labels/sample.json
+  --set env.S3_VIDEO_KEY=video.mp4 \
+  --set env.S3_LABELS_KEY=labels.json \
+  --set env.AWS_DEFAULT_REGION=eu-west-1
 ```
 
 Verify:
 
-```bash
-kubectl get jobs,pods -n car-detector
-kubectl logs -n car-detector job/car-detector-car-detector
+```powershell
+kubectl get jobs -n car-detector
+kubectl get pods -n car-detector
+kubectl logs -n car-detector -l app.kubernetes.io/name=car-detector --tail=80
 ```
+
+Expect Job **Complete 1/1** and logs with `Confusion …` and `Metrics written to s3://…`. Completed Job pods may disappear from `kubectl get pods` while the Job remains **Complete**.
 
 ## Optional: S3 bucket with AWS CDK (Python)
 

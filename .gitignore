@@ -220,6 +220,7 @@ __marimo__/
 # AWS CDK
 infra/cdk/cdk.out/
 infra/cdk/.venv/
+infra/cdk/.venv-eks-test/
 infra/cdk/**/*.egg-info/
 
 # YOLO weights (downloaded locally by Ultralytics / tools)
