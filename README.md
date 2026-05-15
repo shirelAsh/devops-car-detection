@@ -23,7 +23,7 @@ Coordinates are **xyxy**: `[x1, y1, x2, y2]`. By default boxes are **normalized*
 - `i` (or `frame`): zero-based frame index.
 - `boxes`: list of car bounding boxes (only the **car** class is evaluated; labels should be cars only).
 
-**Pseudo-labels from video** (dense export, then stratify — details and interview notes in [`docs/LABELS.md`](docs/LABELS.md)):
+**Pseudo-labels from video** (dense export, then stratify — see [`docs/LABELS.md`](docs/LABELS.md)):
 
 ```powershell
 pip install ultralytics opencv-python-headless
@@ -205,7 +205,7 @@ Expect Job **Complete 1/1** and logs with `Confusion …` and `Metrics written t
 
 ## Optional: S3 bucket with AWS CDK (Python)
 
-For IaC and interviews, see [`infra/cdk/README.md`](infra/cdk/README.md) — deploys a private, encrypted S3 bucket; optional **ECR** repo; optional **EKS** cluster (`-c enableEks=true`) for Helm/IRSA work. Use the stack output as `S3_BUCKET`.
+For IaC, see [`infra/cdk/README.md`](infra/cdk/README.md) — deploys a private, encrypted S3 bucket; optional **ECR** repo; optional **EKS** cluster (`-c enableEks=true`) for Helm/IRSA work. Use the stack output as `S3_BUCKET`.
 
 ## License
 

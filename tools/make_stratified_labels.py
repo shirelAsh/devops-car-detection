@@ -2,8 +2,8 @@
 """
 Build a stratified subset of an existing labels.json (e.g. full pseudo export).
 
-Use case: interview / submission — smaller artifact, clear story:
-  "We evaluate on a stratified frame sample; unlabeled frames have no GT."
+Build a smaller labels file for evaluation on a stratified frame sample;
+unlisted frames have no ground truth in the output artifact.
 """
 
 from __future__ import annotations

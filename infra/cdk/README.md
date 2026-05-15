@@ -1,6 +1,6 @@
 # AWS CDK (Python) — S3 for car-detector
 
-Use this to create the **S3 bucket** with encryption, block public access, and TLS-only (`enforce_ssl=True`). Good for interviews: shows **IaC**, **least exposure**, and **repeatable** environments.
+Use this to create the **S3 bucket** with encryption, block public access, and TLS-only (`enforce_ssl=True`). Provides **IaC**, **least exposure**, and **repeatable** environments.
 
 ## Prerequisites
 
