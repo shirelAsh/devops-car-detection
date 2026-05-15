@@ -34,4 +34,17 @@ CarDetectorEcrStack(
     description="ECR repository for car-detector container image",
 )
 
+# EKS: opt-in — adds a VPC lookup at synth time and deploys a billable control plane + nodes.
+#   cdk synth -c enableEks=true
+#   cdk deploy CarDetectorEksStack -c enableEks=true
+if str(app.node.try_get_context("enableEks") or "").lower() in ("1", "true", "yes"):
+    from eks_stack import CarDetectorEksStack
+
+    CarDetectorEksStack(
+        app,
+        "CarDetectorEksStack",
+        env=env,
+        description="Minimal EKS cluster (default VPC) for Helm / IRSA lab work",
+    )
+
 app.synth()

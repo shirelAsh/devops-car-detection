@@ -142,7 +142,7 @@ aws s3 cp s3://cardetectordatastack-cardetectorbucketf3ab59bc-fwx6sufdchpi/runs/
 2. Job definition: **Pipeline script from SCM** → your repo/branch → **Script Path** `Jenkinsfile`.
 3. Run **Build with Parameters** (Hebrew UI often: **בנייה עם פרמטרים**). Set **S3_BUCKET** (required), and adjust **S3_VIDEO_KEY**, **S3_LABELS_KEY**, **AWS_DEFAULT_REGION**, **AWS_PROFILE** as needed.
 4. **Metric gates (requirement 4):** the `Jenkinsfile` defaults are **`METRICS_GATE_BOX_METRICS=labeled`**, **`MIN_PRECISION=0.05`**, **`MIN_RECALL=0.05`**, **`MIN_ACCURACY=0.45`** so a successful build implies metrics cleared those floors (container exits non‑zero otherwise). Clear those parameter fields **and** remove matching Jenkins globals if you need to disable gates for debugging.
-5. For ECR push, set Jenkins job environment variables **`ECR_REGISTRY`** (e.g. `123456789012.dkr.ecr.region.amazonaws.com`) and **`ECR_REPOSITORY`** on the agent or in the job’s “Inject environment variables” / global properties if your admin allows it; the `Push to ECR` stage runs only when both are non-empty. Image tag uses `BUILD_NUMBER` via `CAR_DETECTOR_IMAGE`.
+5. **ECR push:** fill **Build with Parameters** fields **`ECR_REGISTRY`** (e.g. `123456789012.dkr.ecr.eu-west-1.amazonaws.com`) and **`ECR_REPOSITORY`** (repo name only, e.g. `car-detector`), or set the same names as Jenkins **global / node** environment variables. The **`Push to ECR`** stage runs only when both are non-empty; the pipeline sets **`CAR_DETECTOR_IMAGE`** to `registry/repo:BUILD_NUMBER` so **`Run detector`** uses that image. The agent needs AWS permissions for ECR push (see [`docs/ECR_AND_IRSA.md`](docs/ECR_AND_IRSA.md)).
 6. **Windows agents:** the pipeline uses **`bat`** when `isUnix()` is false. If you still see “Cannot run program `sh`”, pull the latest `Jenkinsfile` (or add Git’s `bin` to the Jenkins service `PATH` so `sh` exists).
 
 ## Helm on EKS
@@ -169,7 +169,7 @@ kubectl logs -n car-detector job/car-detector-car-detector
 
 ## Optional: S3 bucket with AWS CDK (Python)
 
-For IaC and interviews, see [`infra/cdk/README.md`](infra/cdk/README.md) — deploys a private, encrypted S3 bucket; use the stack output as `S3_BUCKET`.
+For IaC and interviews, see [`infra/cdk/README.md`](infra/cdk/README.md) — deploys a private, encrypted S3 bucket; optional **ECR** repo; optional **EKS** cluster (`-c enableEks=true`) for Helm/IRSA work. Use the stack output as `S3_BUCKET`.
 
 ## License
 

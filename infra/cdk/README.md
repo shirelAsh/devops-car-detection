@@ -57,11 +57,41 @@ cdk deploy CarDetectorEcrStack -c ecrRepositoryName=car-detector
 
 Outputs: **RepositoryUri**, **RepositoryName**. For Jenkins `ECR_REGISTRY` / `ECR_REPOSITORY`, split the URI (host vs path — see the doc).
 
+## Deploy EKS cluster (optional third stack — **costs money**)
+
+This repo can create a **small EKS cluster** in the **default VPC** (one `t3.small` node by default) so you can run **Helm** + **IRSA** for the assignment. The control plane and EC2 nodes are billed while they exist — **`cdk destroy CarDetectorEksStack -c enableEks=true`** when you are done.
+
+**Prerequisites:** same as above, plus `pip install -r requirements.txt` (adds `aws-cdk-lambda-layer-kubectl-v31`). IAM user/role needs `eks:*` (broadly: use an admin or `AdministratorAccess` for the lab; tighten for production).
+
+**Synth / deploy** (must pass `-c enableEks=true` or the stack is not in the app):
+
+```powershell
+$env:CDK_DEFAULT_REGION = "eu-west-1"
+$env:CDK_DEFAULT_ACCOUNT = (aws sts get-caller-identity --query Account --output text)
+
+cdk synth -c enableEks=true
+cdk deploy CarDetectorEksStack -c enableEks=true
+```
+
+After deploy, use the **CloudFormation output** `KubeConfigHint`:
+
+```powershell
+aws eks update-kubeconfig --region eu-west-1 --name <ClusterName-from-output>
+kubectl get nodes
+```
+
+**Destroy** (stops most charges; clean up ENIs if the stack delete stalls):
+
+```powershell
+cdk destroy CarDetectorEksStack -c enableEks=true
+```
+
 ## Destroy (removes bucket and objects because of `auto_delete_objects`)
 
 ```powershell
 cdk destroy CarDetectorDataStack
 cdk destroy CarDetectorEcrStack
+cdk destroy CarDetectorEksStack -c enableEks=true
 ```
 
 For a **submission** bucket you want to keep, change `removal_policy` and `auto_delete_objects` in `car_detector_stack.py` before deploying.

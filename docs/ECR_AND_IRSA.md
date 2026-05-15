@@ -59,14 +59,14 @@ Stack outputs: **RepositoryUri**, **RepositoryName**. Use **RepositoryUri** with
 
 ## 2. Jenkins — enable “Push to ECR” stage
 
-In Jenkins **global properties** or job env, set:
+Set both variables (non-empty) using either **Build with Parameters** (`ECR_REGISTRY`, `ECR_REPOSITORY` in the `Jenkinsfile`) or Jenkins **global / node** environment properties:
 
 | Variable | Example |
 |----------|---------|
 | `ECR_REGISTRY` | `123456789012.dkr.ecr.eu-west-1.amazonaws.com` |
 | `ECR_REPOSITORY` | `car-detector` |
 
-The `Jenkinsfile` **Push to ECR** stage sets `CAR_DETECTOR_IMAGE` to `ECR_REGISTRY/ECR_REPOSITORY:$BUILD_NUMBER`, logs in, `docker compose build`, `docker compose push`.
+The pipeline exports `CAR_DETECTOR_IMAGE` as `ECR_REGISTRY/ECR_REPOSITORY:$BUILD_NUMBER` when both are set (otherwise `car-detector:local`). The **Push to ECR** stage logs in with `aws ecr get-login-password`, runs `docker compose build`, then `docker compose push`. **Run detector** uses the same `CAR_DETECTOR_IMAGE` so the S3 job runs the image you just pushed.
 
 ---
 

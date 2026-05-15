@@ -11,6 +11,8 @@ pipeline {
     string(name: 'MIN_RECALL', defaultValue: '0.05', description: 'Fail if box recall (see METRICS_GATE_BOX_METRICS) is below this. Clear + unset global to disable.')
     string(name: 'MIN_ACCURACY', defaultValue: '0.45', description: 'Fail if frame car-presence accuracy is below this. Clear + unset global to disable.')
     string(name: 'METRICS_GATE_BOX_METRICS', defaultValue: 'labeled', description: 'labeled (recommended, sparse labels) or global — which box metrics MIN_PRECISION/MIN_RECALL use')
+    string(name: 'ECR_REGISTRY', defaultValue: '', description: 'Optional — e.g. 123456789012.dkr.ecr.eu-west-1.amazonaws.com (enables Push to ECR + run from that image)')
+    string(name: 'ECR_REPOSITORY', defaultValue: '', description: 'Optional — ECR repo name only, e.g. car-detector (no registry prefix)')
   }
 
   // Faster rebuilds: BuildKit + Compose delegating build (pip cache mount in Dockerfile).
@@ -29,6 +31,9 @@ pipeline {
     BUILD_ID = "${env.BUILD_NUMBER}"
     DOCKER_BUILDKIT = '1'
     COMPOSE_DOCKER_CLI_BUILD = '1'
+    ECR_REGISTRY = "${params.ECR_REGISTRY?.trim() ? params.ECR_REGISTRY.trim() : (env.ECR_REGISTRY ?: '')}"
+    ECR_REPOSITORY = "${params.ECR_REPOSITORY?.trim() ? params.ECR_REPOSITORY.trim() : (env.ECR_REPOSITORY ?: '')}"
+    CAR_DETECTOR_IMAGE = "${ECR_REGISTRY?.trim() && ECR_REPOSITORY?.trim() ? "${ECR_REGISTRY.trim()}/${ECR_REPOSITORY.trim()}:${env.BUILD_NUMBER}" : 'car-detector:local'}"
   }
 
   stages {
@@ -37,6 +42,12 @@ pipeline {
         script {
           if (!env.S3_BUCKET?.trim()) {
             error 'S3_BUCKET is empty. Set it under Manage Jenkins → System → Global properties → Environment variables, or use Build with Parameters / "בנייה עם פרמטרים".'
+          }
+          if (env.ECR_REGISTRY?.trim() && env.ECR_REPOSITORY?.trim() && env.ECR_REGISTRY.contains('/')) {
+            error 'ECR_REGISTRY must be the host only (e.g. 737404990857.dkr.ecr.eu-west-1.amazonaws.com) with no path. The part after the first / belongs in ECR_REPOSITORY only (e.g. car-detector). Do not paste a full Repository URI into ECR_REGISTRY.'
+          }
+          if (env.ECR_REGISTRY?.trim() && env.ECR_REGISTRY.contains('amazonaws.come')) {
+            error 'ECR_REGISTRY is misspelled: use ...amazonaws.com (ends in .com), not amazonaws.come.'
           }
         }
       }
