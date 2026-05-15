@@ -2,41 +2,6 @@
 
 YOLOv8 **car-only** video evaluation: read video + labels from **S3**, run inference, compare to labels, compute **confusion matrix** + **precision / recall / accuracy**, write **metrics JSON** back to **S3**. Docker, docker-compose, Jenkinsfile, and Helm **Job** for EKS are included.
 
-## Submission screenshots
-
-Evidence images live in [`screenshots/`](screenshots/). After adding PNGs, run from repo root:
-
-```powershell
-.\screenshots\copy-from-cursor-assets.ps1   # optional: copy from Cursor chat assets
-git add screenshots/*.png screenshots/README.md README.md
-git commit -m "Add submission screenshots"
-git push origin main
-```
-
-### Jenkins
-
-![Jenkins: metrics, confusion matrix, and SUCCESS](screenshots/jenkins-metrics-success.png)
-
-![Jenkins: Finished SUCCESS](screenshots/jenkins-finished-success.png)
-
-![Jenkins: ECR push car-detector:15](screenshots/jenkins-ecr-push.png)
-
-### Amazon ECR
-
-![ECR: car-detector tags v1 and 15](screenshots/ecr-car-detector-tags.png)
-
-### Amazon EKS (`car-detector-eks`)
-
-![EKS cluster Active](screenshots/eks-cluster-active.png)
-
-![kubectl get jobs Complete 1/1](screenshots/kubectl-get-jobs.png)
-
-![EKS pod logs with metrics written to S3](screenshots/eks-pod-logs-metrics.png)
-
-![EKS pod Succeeded, exit code 0](screenshots/eks-describe-pod-success.png)
-
-![EKS pod IRSA role and image pull](screenshots/eks-describe-pod-irsa.png)
-
 ## Label format (`labels.json` in S3)
 
 Coordinates are **xyxy**: `[x1, y1, x2, y2]`. By default boxes are **normalized** to `0–1` relative to frame width/height; set `LABELS_NORMALIZED=false` for pixel coordinates.
