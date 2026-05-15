@@ -85,19 +85,3 @@ kubectl get nodes
 ```powershell
 cdk destroy CarDetectorEksStack -c enableEks=true
 ```
-
-## Destroy (removes bucket and objects because of `auto_delete_objects`)
-
-```powershell
-cdk destroy CarDetectorDataStack
-cdk destroy CarDetectorEcrStack
-cdk destroy CarDetectorEksStack -c enableEks=true
-```
-
-For a **submission** bucket you want to keep, change `removal_policy` and `auto_delete_objects` in `car_detector_stack.py` before deploying.
-
-## Interview talking points
-
-- **IaC**: same bucket in dev/stage/prod via parameters or separate stacks.
-- **Security**: no public access, SSE-S3, HTTPS-only to the bucket API.
-- **Next step**: attach **IAM policies** (user or IRSA role) with `s3:GetObject` / `s3:PutObject` scoped to `arn:aws:s3:::bucket-name/*` — often a second stack or a separate “runtime roles” construct.
