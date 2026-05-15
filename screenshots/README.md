@@ -4,11 +4,17 @@ Evidence for the **devops-car-detection** pipeline: Jenkins CI → Amazon ECR �
 
 **AWS context (this run):** account `737404990857`, region `eu-west-1`, ECR repo `car-detector`, image tag **`15`**, EKS cluster **`car-detector-eks`**, namespace **`car-detector`**, S3 bucket `cardetectordatastack-cardetectorbucketf3ab59bc-fwx6sufdchpi`.
 
-Suggested reading order: Jenkins (1–3) → ECR (4) → EKS (5–10).
+Suggested reading order: Jenkins (1–4) → ECR (5) → EKS (6–11).
 
 ---
 
 ## Jenkins CI
+
+### `jenkins-job-dashboard.png`
+
+![Jenkins: car-detector job — last success build 15](jenkins-job-dashboard.png)
+
+Jenkins job list for **`car-detector`**: green status, **last successful build #15** (~4 min duration), stable weather icon. Proves the pipeline job exists and recent CI runs succeeded before opening console logs.
 
 ### `jenkins-ecr-push.png`
 
@@ -93,6 +99,7 @@ Proves the pod is configured for S3 access via **IAM Roles for Service Accounts*
 
 | Screenshot | What it proves |
 |------------|----------------|
+| [jenkins-job-dashboard.png](jenkins-job-dashboard.png) | Jenkins job green; last success build #15 |
 | [jenkins-ecr-push.png](jenkins-ecr-push.png) | CI pushes image to ECR |
 | [jenkins-metrics-success.png](jenkins-metrics-success.png) | CI runs detector + S3 metrics |
 | [jenkins-finished-success.png](jenkins-finished-success.png) | Jenkins pipeline green |
