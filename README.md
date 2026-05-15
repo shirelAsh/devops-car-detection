@@ -2,6 +2,10 @@
 
 YOLOv8 **car-only** video evaluation: read video + labels from **S3**, run inference, compare to labels, compute **confusion matrix** + **precision / recall / accuracy**, write **metrics JSON** back to **S3**. Docker, docker-compose, Jenkinsfile, and Helm **Job** for EKS are included.
 
+## Submission screenshots
+
+Pipeline evidence (Jenkins → ECR → EKS → S3) lives in [`screenshots/`](screenshots/). Each PNG is shown inline with a short explanation in [`screenshots/README.md`](screenshots/README.md).
+
 ## Label format (`labels.json` in S3)
 
 Coordinates are **xyxy**: `[x1, y1, x2, y2]`. By default boxes are **normalized** to `0–1` relative to frame width/height; set `LABELS_NORMALIZED=false` for pixel coordinates.
